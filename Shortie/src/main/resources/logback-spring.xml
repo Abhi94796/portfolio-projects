@@ -1,0 +1,93 @@
+<configuration scan="true">
+
+  <!-- Allow reading Spring properties -->
+  <springProperty name="app.logging.dir" source="app.logging.dir"/>
+
+  <!-- Directory where logs are written. Prefer LOG_DIR system property, then app.logging.dir, then ./logs -->
+  <property name="LOG_DIR" value="${LOG_DIR:-${app.logging.dir:-./logs}}"/>
+
+  <!-- Console appender -->
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!-- Primary rolling file for non-error logs (INFO/WARN/DEBUG) -->
+  <appender name="PRIMARY_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_DIR}/primary_logs</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <!-- daily files with size-based rollover -->
+      <fileNamePattern>${LOG_DIR}/primary_logs.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+        <maxFileSize>10MB</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
+      <maxHistory>30</maxHistory>
+    </rollingPolicy>
+    <!-- Exclude ERROR and above from the primary file (they go to error file) -->
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>ERROR</level>
+      <onMatch>DENY</onMatch>
+      <onMismatch>NEUTRAL</onMismatch>
+    </filter>
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!-- Error file: only ERROR and above -->
+  <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_DIR}/error_logs</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_DIR}/error_logs.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+        <maxFileSize>20MB</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
+      <maxHistory>60</maxHistory>
+    </rollingPolicy>
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>ERROR</level>
+      <onMatch>ACCEPT</onMatch>
+      <onMismatch>DENY</onMismatch>
+    </filter>
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n%ex{full}</pattern>
+    </encoder>
+  </appender>
+
+  <!-- Server/startup logs file: intended for Spring Boot and app startup messages -->
+  <appender name="SERVER_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_DIR}/server_logs</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_DIR}/server_logs.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+        <maxFileSize>20MB</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
+      <maxHistory>30</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n%ex{short}</pattern>
+    </encoder>
+  </appender>
+
+  <!-- Logger for Spring Boot startup messages and the main application class -->
+  <logger name="org.springframework.boot" level="INFO" additivity="false">
+    <appender-ref ref="SERVER_FILE"/>
+    <!-- Also forward ERROR-level records from spring boot to the ERROR_FILE -->
+    <appender-ref ref="ERROR_FILE"/>
+  </logger>
+
+  <logger name="com.example.urlshortener.URLShortenerApplication" level="INFO" additivity="false">
+    <appender-ref ref="SERVER_FILE"/>
+    <!-- forward errors to error file as well -->
+    <appender-ref ref="ERROR_FILE"/>
+  </logger>
+
+  <!-- Root logger: non-error logs go to PRIMARY_FILE, errors go to ERROR_FILE, and console -->
+  <root level="INFO">
+    <appender-ref ref="PRIMARY_FILE"/>
+    <appender-ref ref="ERROR_FILE"/>
+    <appender-ref ref="CONSOLE"/>
+  </root>
+
+</configuration>

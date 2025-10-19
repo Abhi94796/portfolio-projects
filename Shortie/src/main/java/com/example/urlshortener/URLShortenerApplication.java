@@ -14,7 +14,7 @@ public class URLShortenerApplication {
         log.info("Starting Shortie (URLShortenerApplication) with args={}", (Object) args);
 
         SpringApplication.run(URLShortenerApplication.class, args);
-        
+
         log.info("Shortie application started !!");
     }
 }
