@@ -1,88 +1,67 @@
-# Shortie - URL Shortener
+# Shortie — URL Shortener
 
-Shortie is a simple URL shortening service built with Spring Boot. It allows users to shorten long URLs, optionally specify custom aliases, and redirect to the original URLs using the generated short codes.
+Shortie is a simple URL shortening service implemented in Java using Spring Boot. It generates short aliases for long URLs and redirects users from the short link to the original URL.
 
-## Features
-- Shorten any valid URL to a short code
-- Optionally provide a custom alias for your short URL
-- Redirect to the original URL using the short code
-- Simple REST API endpoints
+Key features
+- Short URLs created using UUIDs + Base62 encoding for strong uniqueness.
+- REST endpoints to shorten URLs and resolve short codes.
+- Persistence using JPA (configured for PostgreSQL in pom.xml).
+- OpenAPI/Swagger UI (springdoc) for interactive API docs.
 
-## Technologies Used
-- Java 17+
-- Spring Boot
-- Spring Web
-- Spring Data JPA
-- H2 (in-memory) or any SQL database
+Quick start
+1. Build the project:
 
-## Getting Started
-
-### Prerequisites
-- Java 17 or higher
-- Maven
-
-### Running the Application
-1. Clone the repository:
-   ```bash
-   git clone <repo-url>
-   cd Shortie
-   ```
-2. Build and run the application:
-   ```bash
-   mvn spring-boot:run
-   ```
-3. The application will start on `http://localhost:8080` by default.
-
-### API Endpoints
-
-#### 1. Shorten a URL
-- **Endpoint:** `POST /shortie/shorten`
-- **Request Body:**
-  ```json
-  {
-    "originalUrl": "https://example.com/very/long/url",
-    "customAlias": "myalias" // optional
-  }
-  ```
-- **Response:**
-  - Returns the shortened URL or alias.
-
-#### 2. Redirect to Original URL
-- **Endpoint:** `GET /shortie/{shortCode}`
-- **Response:**
-  - Returns the original URL if found, or an error message if not found.
-
-### Example Usage
-
-**Shorten a URL:**
-```bash
-curl -X POST -H "Content-Type: application/json" \
-  -d '{"originalUrl": "https://www.google.com"}' \
-  http://localhost:8080/shortie/shorten
+```cmd
+cd g:\abhi\portfolio-projects\Shortie
+mvn -DskipTests package
 ```
 
-**Redirect (get original URL):**
-```bash
-curl http://localhost:8080/shortie/abc123
+2. Run the application:
+
+```cmd
+mvn spring-boot:run
 ```
 
-### Configuration
-- Edit `src/main/resources/application.properties` to configure database or server settings as needed.
+3. Open Swagger UI in your browser (default):
 
-## Project Structure
-```
-Shortie/
-├── pom.xml
-└── src/
-    └── main/
-        ├── java/
-        │   └── com/example/urlshortener/
-        │       ├── controller/
-        │       ├── model/
-        │       ├── repository/
-        │       └── service/
-        └── resources/
-            └── application.properties
+http://localhost:8080/swagger-ui.html
+
+API endpoints
+- POST /shortie/shorten — Accepts JSON { "originalUrl": "https://...", "customAlias": "optional" } and returns the shortened URL.
+- GET /shortie/{shortCode} — Returns the original URL for the given short code.
+
+How short codes are generated
+- The service now uses java.util.UUID.randomUUID() to produce a 128-bit value, converts it to bytes, encodes those bytes into Base62 (0-9a-zA-Z), and returns the first 7 characters of that Base62 string. This approach provides strong uniqueness and produces compact short codes.
+
+Documenting with Swagger / OpenAPI
+- The project includes the `springdoc-openapi-starter-webmvc-ui` dependency which automatically exposes OpenAPI metadata and a Swagger UI.
+- To document a controller or method, you can use annotations provided by `io.swagger.v3.oas.annotations`.
+  - Annotate controllers with `@Tag(name = "...")`.
+  - Annotate endpoints with `@Operation(summary = "...", description = "...")`.
+  - Use `@Parameter` for parameters and `@ApiResponse` to document responses.
+
+Example (controller method):
+
+```java
+@Tag(name = "URL Shortener", description = "API for shortening URLs")
+@RestController
+@RequestMapping("/shortie")
+public class UrlController {
+
+    @Operation(summary = "Shorten a URL", description = "Generates a short URL for the given original URL.")
+    @PostMapping("/shorten")
+    public String shorten(@RequestBody Map<String,String> request) { ... }
+}
 ```
 
+Notes on code quality warnings
+- The IDE may show warnings like "field is never assigned" for Spring `@Autowired` fields; these are injected at runtime by Spring and can be safely ignored or replaced with constructor injection to satisfy static analysis.
+
+Next steps / Improvements
+- Add constructor injection for services and repositories to remove static-analysis warnings.
+- Add unit and integration tests for the `UrlService` and controller.
+- Add rate limiting and analytics for production readiness.
+
+License
+MIT
 

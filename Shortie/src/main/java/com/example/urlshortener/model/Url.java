@@ -9,12 +9,27 @@ public class Url {
     private String originalUrl;
     private long clickCount;
 
-    public String getShortUrl() { return shortUrl; }
-    public void setShortUrl(String shortUrl) { this.shortUrl = shortUrl; }
+    public String getShortUrl() {
+        return shortUrl;
+    }
 
-    public String getOriginalUrl() { return originalUrl; }
-    public void setOriginalUrl(String originalUrl) { this.originalUrl = originalUrl; }
+    public void setShortUrl(String shortUrl) {
+        this.shortUrl = shortUrl;
+    }
 
-    public long getClickCount() { return clickCount; }
-    public void setClickCount(long clickCount) { this.clickCount = clickCount; }
+    public String getOriginalUrl() {
+        return originalUrl;
+    }
+
+    public void setOriginalUrl(String originalUrl) {
+        this.originalUrl = originalUrl;
+    }
+
+    public long getClickCount() {
+        return clickCount;
+    }
+
+    public void setClickCount(long clickCount) {
+        this.clickCount = clickCount;
+    }
 }
